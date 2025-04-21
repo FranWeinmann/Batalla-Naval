@@ -34,6 +34,11 @@ BUTTON = (160, 82, 45)
 BUTTON_HOVER = (205, 133, 63)
 BUTTON_PRESSED = (139, 69, 19)
 
+# Input de nombre
+input_box = pygame.Rect(300, 200, 200, 40)
+input_active = False
+input_text = ''
+
 text_lines = [
     "██████╗  █████╗ ████████╗ █████╗ ██╗     ██╗      █████╗   ███╗  ██╗ █████╗ ██╗   ██╗ █████╗ ██╗     ",
     "██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██║     ██║     ██╔══██╗  ████╗ ██║██╔══██╗██║   ██║██╔══██╗██║     ",
@@ -49,43 +54,38 @@ def show_text(textOptions):
     screen.blit(text, (125, 125))
 
 # Función para mostrar los inputs
-def show_input(events, textBefore, label_offset=(0, 0)):
-    input_box = pygame.Rect(200, 100, 200, 40)
-    color_inactive = BORDER
-    color_active = BUTTON_HOVER
-    color = color_inactive
-    input_text = ""
-    active = False
+def show_labeled_input(label, input_box, active, text, events, label_offset=(0, 0)):
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_active if active else color_inactive
 
     for event in events:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if input_box.collidepoint(event.pos):
-                active = True
+                active = not active
             else:
                 active = False
         if event.type == pygame.KEYDOWN and active:
             if event.key == pygame.K_RETURN:
-                print("Texto ingresado:", input_text)
+                print(f"{label} ingresado:", text)
+                return '', active  # Limpiar el texto
             elif event.key == pygame.K_BACKSPACE:
-                input_text = input_text[:-1]
+                text = text[:-1]
             else:
-                if event.unicode.isdigit():
-                    input_text += event.unicode
-                else:
-                    show_text('Debes ingresar números')
+                text += event.unicode
 
-    color = color_active if active else color_inactive
+    # Mostrar etiqueta
+    label_surface = secondFont.render(f"{label}:", True, WHITE)
+    screen.blit(label_surface, (input_box.x - label_surface.get_width() - 10 + label_offset[0], input_box.y + label_offset[1]))
 
-    text_beforeInput = secondFont.render(f"{textBefore}:", True, WHITE)
-    screen.blit(text_beforeInput, (input_box.x - text_beforeInput.get_width() - 10 + label_offset[0], input_box.y + label_offset[1]))
-
-    input_surface = secondFont.render(input_text, True, WHITE)
-    width = max(200, input_surface.get_width() + 10)
+    # Mostrar texto ingresado
+    txt_surface = secondFont.render(text, True, WHITE)
+    width = max(200, txt_surface.get_width() + 10)
     input_box.w = width
-    screen.blit(input_surface, (input_box.x + 5, input_box.y + 5))
+    screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
     pygame.draw.rect(screen, color, input_box, 2)
 
-    return input_text, active
+    return text, active
 
 
 
@@ -142,7 +142,7 @@ while True:
     elif page == 1:
         show_text("Decida las dimensiones del tablero:")
         show_button("Salir", (1050, 520, 105, 60))
-        show_input(eventos, 'row')
+        input_text, input_active = show_labeled_input("Nombre", input_box, input_active, input_text, eventos)
     elif page == 2:
         print("Modo 2 jugadores seleccionado")
 
