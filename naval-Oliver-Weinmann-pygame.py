@@ -35,9 +35,13 @@ BUTTON_HOVER = (205, 133, 63)
 BUTTON_PRESSED = (139, 69, 19)
 
 # Input de nombre
-input_box = pygame.Rect(300, 200, 200, 40)
-input_active = False
-input_text = ''
+input_box_filas = pygame.Rect(300, 200, 200, 40)
+input_active_filas = False
+input_text_filas = ''
+
+input_box_columnas = pygame.Rect(300, 200, 200, 40)
+input_active_columnas = False
+input_text_columnas = ''
 
 text_lines = [
     "██████╗  █████╗ ████████╗ █████╗ ██╗     ██╗      █████╗   ███╗  ██╗ █████╗ ██╗   ██╗ █████╗ ██╗     ",
@@ -53,32 +57,49 @@ def show_text(textOptions):
     text = secondFont.render(textOptions, True, WHITE)
     screen.blit(text, (125, 125))
 
-# Función para mostrar los inputs
-def show_labeled_input(label, input_box, active, text, events, label_offset=(0, 0)):
+# Función para mostrar los inputs con posición controlada por offset
+def show_labeled_input(label, base_rect, active, text, events, offset_pos=(0, 0), label_offset=(0, 0)):
+    # Colores de los bordes del input
     color_inactive = pygame.Color('lightskyblue3')
     color_active = pygame.Color('dodgerblue2')
     color = color_active if active else color_inactive
 
+    # Copiamos el input_box con su posición desplazada
+    input_box = pygame.Rect(
+        base_rect.x + offset_pos[0],
+        base_rect.y + offset_pos[1],
+        base_rect.w,
+        base_rect.h
+    )
+
+    # Manejo de eventos
     for event in events:
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # Si se hace clic en este input, se activa
             if input_box.collidepoint(event.pos):
-                active = not active
+                active = True
             else:
                 active = False
         if event.type == pygame.KEYDOWN and active:
             if event.key == pygame.K_RETURN:
                 print(f"{label} ingresado:", text)
-                return '', active  # Limpiar el texto
+                return '', active  # Limpiar texto
             elif event.key == pygame.K_BACKSPACE:
                 text = text[:-1]
             else:
                 text += event.unicode
 
-    # Mostrar etiqueta
+    # Dibujar la etiqueta
     label_surface = secondFont.render(f"{label}:", True, WHITE)
-    screen.blit(label_surface, (input_box.x - label_surface.get_width() - 10 + label_offset[0], input_box.y + label_offset[1]))
+    screen.blit(
+        label_surface,
+        (
+            input_box.x - label_surface.get_width() - 10 + label_offset[0],
+            input_box.y + label_offset[1]
+        )
+    )
 
-    # Mostrar texto ingresado
+    # Dibujar el texto del input
     txt_surface = secondFont.render(text, True, WHITE)
     width = max(200, txt_surface.get_width() + 10)
     input_box.w = width
@@ -86,8 +107,6 @@ def show_labeled_input(label, input_box, active, text, events, label_offset=(0, 
     pygame.draw.rect(screen, color, input_box, 2)
 
     return text, active
-
-
 
 # Función para mostrar el texto grande
 def showBatallaNaval():
@@ -116,6 +135,8 @@ def show_button(textChange, positionChange):
                 page = 1
             elif textChange == '2.  Two Players':
                 page = 2
+            elif textChange == 'Volver':
+                page = 0
     else:
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         button_color = BUTTON
@@ -138,12 +159,18 @@ while True:
         show_button("1.  One Player", (220, 300, 240, 60))
         show_button("2.  Two Players", (500, 300, 245, 60))
         show_button("3.  Salir", (780, 300, 160, 60))
-
     elif page == 1:
         show_text("Decida las dimensiones del tablero:")
         show_button("Salir", (1050, 520, 105, 60))
-        input_text, input_active = show_labeled_input("Nombre", input_box, input_active, input_text, eventos)
+        show_button("Volver", (10, 520, 130, 60))
+        input_text_filas, input_active_filas = show_labeled_input("Cantidad de filas", input_box_filas, input_active_filas, input_text_filas, eventos)
+        input_text_columnas, input_active_columnas = show_labeled_input("Cantidad de columnas", input_box_columnas, input_active_columnas, input_text_columnas, eventos, offset_pos=(75, 50))
     elif page == 2:
-        print("Modo 2 jugadores seleccionado")
+        show_text("Decida las dimensiones del tablero:")
+        #                      X     Y  ANCHO  ALTO
+        show_button("Salir", (1050, 520, 105, 60))
+        show_button("Volver", (10, 520, 130, 60))
+        input_text_filas, input_active_filas = show_labeled_input("Cantidad de filas", input_box_filas, input_active_filas, input_text_filas, eventos)
+        input_text_columnas, input_active_columnas = show_labeled_input("Cantidad de columnas", input_box_columnas, input_active_columnas, input_text_columnas, eventos, offset_pos=(75, 50))
 
     pygame.display.flip()
